@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Sentinel Pro - Telemetria Industrial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <h2>IoT Sentinel <span>Pro</span></h2>
+                <p>Monitoramento em Tempo Real</p>
+            </div>
+
+            <form id="sensor-form" class="sensor-form">
+                <h3>Cadastrar Novo Sensor</h3>
+                
+                <div class="input-group">
+                    <label for="sensor-name">Nome do Ativo / Sensor</label>
+                    <input type="text" id="sensor-name" placeholder="Ex: Termopar Tipo K - Forno 01" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="sensor-type">Tipo de Sensor</label>
+                    <select id="sensor-type" required>
+                        <option value="" disabled selected>Selecione o tipo...</option>
+                        <option value="TEMPERATURA">Temperatura (°C)</option>
+                        <option value="PRESSÃO">Pressão (Bar)</option>
+                        <option value="UMIDADE">Umidade (%)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="sensor-value">Valor Atual Lido</label>
+                    <input type="number" id="sensor-value" step="0.1" placeholder="Ex: 45.2" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Registrar Sensor</button>
+            </form>
+
+            <div class="sidebar-footer">
+                <p>Status do Sistema: <strong>Operacional</strong></p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Painel de Telemetria Operacional</h1>
+                <span class="date-badge">Planta Industrial Ativa</span>
+            </header>
+
+            <section class="analytics-section">
+                <div class="chart-container">
+                    <h3>Média das Medições por Categoria</h3>
+                    <canvas id="metricsChart"></canvas>
+                </div>
+            </section>
+
+            <section class="monitors-section">
+                <h3>Sensores em Campo</h3>
+                <div id="sensor-grid" class="sensor-grid">
+                    </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
