@@ -5,7 +5,7 @@
 class Sensor {
     constructor(nome, tipo, valor) {
         this.nome = nome;
-        this.tipo = tipo; // 'TEMPERATURA', 'PRESSÃO' ou 'UMIDADE'
+        this.tipo = tipo; // 'TEMPERATURA', 'PRESSAO' ou 'UMIDADE' (Sem acentos nas chaves de controle)
         this.valor = parseFloat(valor);
     }
 
@@ -17,8 +17,9 @@ class Sensor {
         switch (this.tipo) {
             case 'TEMPERATURA':
                 return this.valueControl(this.valor > 50);
-            case 'PRESSÃO':
-                return this.valueControl(this.valor < 10 || this.valor > 100);
+            case 'PRESSAO':
+                // CORREÇÃO: Crítico apenas se for maior que 100 Bar, conforme o edital
+                return this.valueControl(this.valor > 100);
             case 'UMIDADE':
                 return this.valueControl(this.valor < 30 || this.valor > 80);
             default:
@@ -26,7 +27,6 @@ class Sensor {
         }
     }
 
-    
     // Função auxiliar interna para modularizar o retorno do status  
     valueControl(condicao) {
         return condicao ? 'CRÍTICO' : 'NORMAL';
@@ -41,6 +41,16 @@ let chartInstance = null; // Armazena a referência interna do Chart.js
 // Mapeamento dos Elementos Ativos do DOM
 const sensorForm = document.getElementById('sensor-form');
 const sensorGrid = document.getElementById('sensor-grid');
+const inputNome = document.getElementById('sensor-name');
+
+
+/**
+ * REQUISITO OBRIGATÓRIO DE UX: Manipulador de Evento onblur
+ * Faz a higienização em tempo de execução usando .trim() assim que o operador sai do campo
+ */
+inputNome.addEventListener('blur', (e) => {
+    e.target.value = e.target.value.trim();
+});
 
 
 // Evento acionado ao carregar o DOM (Montagem da aplicação e busca de persistência)
@@ -58,18 +68,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // FLUXO CENTRAL: Cadastro de Novos Ativos
- 
 sensorForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
     // Captura dos elementos do formulário
-    const rawNome = document.getElementById('sensor-name').value;
+    const rawNome = inputNome.value;
     const tipo = document.getElementById('sensor-type').value;
     const rawValor = document.getElementById('sensor-value').value;
 
-    // Higienização de strings obrigatória antes do processamento (.trim() e .toUpperCase())
+    // Higienização de strings obrigatória usando .trim() e .toUpperCase()
     const nomeHigienizado = rawNome.trim();
-    const tipoHigienizado = tipo.toUpperCase().trim();
+    
+    // CORREÇÃO: Removido o caractere especial de acentuação para manter a consistência da chave de controle
+    let tipoHigienizado = tipo.toUpperCase().trim();
+    if (tipoHigienizado === 'PRESSÃO') tipoHigienizado = 'PRESSAO';
 
     // Criação de nova instância da classe
     const novoSensor = new Sensor(nomeHigienizado, tipoHigienizado, rawValor);
@@ -84,7 +96,7 @@ sensorForm.addEventListener('submit', (e) => {
 
     // Reseta inputs e reposiciona o foco de digitação
     sensorForm.reset();
-    document.getElementById('sensor-name').focus();
+    inputNome.focus();
 });
 
 /*
@@ -115,15 +127,15 @@ function salvarNoLocalStorage() {
   @returns {number} Média calculada formatada em 1 casa decimal
  */
 function calcularMediaPorTipo(tipoAlvo) {
-    // Filtragem avançada das categorias
+    // Filtragem avançada das categorias (.filter())
     const sensoresFiltrados = listaSensores.filter(sensor => sensor.tipo === tipoAlvo);
     
     if (sensoresFiltrados.length === 0) return 0;
 
-    // Consolidação de valores via acumulador do método reduce
+    // Consolidação de valores via acumulador do método reduce (.reduce())
     const somaValores = sensoresFiltrados.reduce((acumulador, sensor) => acumulador + sensor.valor, 0);
     
-    return (somaValores / sensoresFiltrados.length).toFixed(1);
+    return parseFloat((somaValores / sensoresFiltrados.length).toFixed(1));
 }
 
 
@@ -132,7 +144,7 @@ function renderizarInterface() {
     // Limpeza prévia do container para evitar duplicações de iteração
     sensorGrid.innerHTML = '';
 
-    // Varre o array injetando a estrutura HTML mapeando o índice corrente para remoção
+    // Varre o array injetando a estrutura HTML mapeando o índice corrente para remoção (.forEach())
     listaSensores.forEach((sensor, index) => {
         const status = sensor.obterStatus();
         const cardElement = document.createElement('div');
@@ -143,7 +155,7 @@ function renderizarInterface() {
         // Mapeamento dos modificadores de unidade de engenharia
         let unidade = '';
         if (sensor.tipo === 'TEMPERATURA') unidade = '°C';
-        else if (sensor.tipo === 'PRESSÃO') unidade = ' Bar';
+        else if (sensor.tipo === 'PRESSAO') unidade = ' Bar';
         else if (sensor.tipo === 'UMIDADE') unidade = ' %';
 
         cardElement.innerHTML = `
@@ -218,7 +230,7 @@ function atualizarEstatisticasGrafico() {
     if (!chartInstance) return;
 
     const mediaTemp = calcularMediaPorTipo('TEMPERATURA');
-    const mediaPressao = calcularMediaPorTipo('PRESSÃO');
+    const mediaPressao = calcularMediaPorTipo('PRESSAO');
     const mediaUmidade = calcularMediaPorTipo('UMIDADE');
 
     // Injeta os dados matemáticos atualizados direto no array do dataset da biblioteca
